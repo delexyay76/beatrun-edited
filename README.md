@@ -3,11 +3,9 @@
 [![Powered by Electricity](https://forthebadge.com/images/featured/featured-powered-by-electricity.svg)](https://forthebadge.com)
 [![Powered by Black Magic](https://forthebadge.com/images/badges/powered-by-black-magic.svg)](https://forthebadge.com)
 
-[**Join our Discord Community!**](https://discord.gg/93Psubbgsg)
+[**Join JohnyBro's Discord Community!**](https://discord.gg/93Psubbgsg)
 
-> *[Русский | Russian](./README.ru.md)*
-
----
+--- btw im lazy to edit allat so yeah johny bro is cool and his team too
 
 ## 🚨 Important Notice
 
@@ -67,49 +65,6 @@ irm https://beatrun.jonnybro.ru/install | iex
 
 ---
 
-## Features and Updates
-
-### New Features
-
-- **Custom Courses Database** hosted by Jonny_Bro: **[Access Here](https://courses.jonnybro.ru)** (free and **[open source](https://git.jonnybro.ru/jonny_bro/beatrun-courses-server)**).
-- **New Gamemode:** Deathmatch.
-- "Proper" Kick Glitch similar to the **[original game](https://www.youtube.com/watch?v=zK5y3NBUStc)**.
-- In-game configuration menu in the Tools menu under **Beatrun**. All settings can be modified here.
-- Localization support in **7 languages**.
-- Enhanced Build Mode: spawn props from the Spawn Menu, and they will save in your course.
-- Various new abilities:
-  - **Roll after ziplines:** Press `+duck` (CTRL by default).
-  - **Dismount ladders:** Press `+duck` (CTRL by default).
-  - **Remove ziplines created with Zipline Gun:** Press `+attack2` (RMB by default).
-  - **Next checkpoint arrow** for easier navigation.
-- New server and client configuration variables:
-  - Server:
-    - `Beatrun_AllowOverdriveInMultiplayer`: Allows Overdrive in multiplayer.
-    - `Beatrun_AllowPropSpawn`: Lets players spawn props and weapons without admin rights.
-    - `Beatrun_HealthRegen`: Toggles health regeneration.
-  - Client:
-    - `Beatrun_HUDTextColor`, `Beatrun_HUDCornerColor`, `Beatrun_HUDFloatingXPColor`: Customize HUD colors.
-    - `Beatrun_DisableGrapple`: Toggle the grapple ability.
-    - `Beatrun_KickGlitch`: Switch between old and new Kick Glitch versions.
-    - `Beatrun_QuickturnHandsOnly`: Restrict QuickTurn to the Runner Hands weapon.
-- Other improvements:
-  - Small camera punch effect when diving.
-  - SteamID no longer displayed on screen.
-
-### Fixes
-
-- Fixed playermodels showing as `ERROR` in first person.
-- Improved leaderboard sorting in gamemodes.
-- Fixed crashes and issues with Data Theft gamemode.
-- Enabled jumping while walking.
-- Grapples now follow moving entities and are visible to other players.
-
----
-
-## Animations
-
-The animations installer has been removed. You can now switch animations directly in the **Tools menu** under the Beatrun category.
-
 ---
 
 ## Known Issues
@@ -127,6 +82,8 @@ The animations installer has been removed. You can now switch animations directl
 ## Credits
 
 - **[All contributors](https://github.com/JonnyBro/beatrun/graphs/contributors)** ❤️
+- **[JohnyBro](https://github.com/JonnyBro/beatrun)** ❤️
+- 
 - [EarthyKiller127/datae](https://www.youtube.com/channel/UCiFqPwGo4x0J65xafIaECDQ) - Original creator of Beatrun.
 - [relaxtakenotes](https://github.com/relaxtakenotes) - Made this project possible.
 - [MTB](https://www.youtube.com/@MTB396) - Beatrun Reanimated Project.
