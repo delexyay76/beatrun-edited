@@ -70,6 +70,7 @@ function SWEP:PrimaryAttack()
 	local ply = self:GetOwner()
 
 	if not self.points[#self.points] or (ply:EyePos() + ply:EyeAngles():Forward() * 50):Distance(self.points[#self.points]) > 5 then
+		ply:EmitSound("buttonclick.wav", 100 + math.random(-10, 10), 100 + math.random(-10, 10), 1)
 		table.insert(self.points, ply:EyePos() + ply:EyeAngles():Forward() * 50)
 	end
 end

@@ -14,6 +14,8 @@ if CLIENT then
 	end)
 end
 
+local FaithVO = GetConVar("Beatrun_FaithVO")
+
 SWEP.Author = "datae"
 SWEP.Contact = ""
 SWEP.Purpose = ""
@@ -225,7 +227,8 @@ function SWEP:Think()
 
 		if insidestep and viewmodel:GetCycle() <= 0.1 and GetConVar("Beatrun_QuakeJump"):GetBool() then
 			if SERVER then
-				ply:EmitSound("quakejump.mp3", 100, 100, 0.2)
+				ply:EmitSound("mirrorsedge/ME_BodyConcreteBump7.wav", math.random(90, 110), math.random(90, 110), 2)
+				ply:EmitSound("mirrorsedge/Vault_01.wav", 120 + math.random(-10, 10), 120 + math.random(-10, 10), 1)
 			end
 
 			ply.QuakeJumping = true

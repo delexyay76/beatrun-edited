@@ -67,6 +67,7 @@ function SWEP:PrimaryAttack()
 		local zip = CreateZipline(ply:EyePos(), ply:GetEyeTrace().HitPos)
 
 		zip:SetTwoWay(true)
+		ply:EmitSound("mirrorsedge/gadgets/ME_Magrope_Fire.wav", 100 + math.random(-10, 10), 100 + math.random(-10, 10), 1)
 
 		table.insert(self.ziplines, zip)
 	end
