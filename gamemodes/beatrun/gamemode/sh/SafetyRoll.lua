@@ -87,9 +87,12 @@ net.Receive("RollAnimSP", function()
 
 	if GetConVar("Beatrun_AnimSet"):GetInt() == 0 then
 		roll.animmodelstring = "new_climbanim"
-	else
+	elseif GetConVar("Beatrun_AnimSet"):GetInt() == 1 then
 		roll.animmodelstring = "old_climbanim"
+	elseif GetConVar("Beatrun_AnimSet"):GetInt() == 2 then
+		roll.animmodelstring = "climbanim"
 	end
+
 
 	CacheBodyAnim()
 	RemoveBodyAnim()
@@ -128,10 +131,12 @@ hook.Add("SetupMove", "EvadeRoll", function(ply, mv, cmd)
 
 		if CLIENT and IsFirstTimePredicted() then
 			if GetConVar("Beatrun_AnimSet"):GetInt() == 0 then
-				roll.animmodelstring = "new_climbanim"
-			else
-				roll.animmodelstring = "old_climbanim"
-			end
+		roll.animmodelstring = "new_climbanim"
+	elseif GetConVar("Beatrun_AnimSet"):GetInt() == 1 then
+		roll.animmodelstring = "old_climbanim"
+	elseif GetConVar("Beatrun_AnimSet"):GetInt() == 2 then
+		roll.animmodelstring = "climbanim"
+	end
 
 			CacheBodyAnim()
 			RemoveBodyAnim()
@@ -202,10 +207,12 @@ hook.Add("OnPlayerHitGround", "SafetyRoll", function(ply, water, floater, speed)
 
 		if CLIENT and IsFirstTimePredicted() then
 			if GetConVar("Beatrun_AnimSet"):GetInt() == 0 then
-				roll.animmodelstring = "new_climbanim"
-			else
-				roll.animmodelstring = "old_climbanim"
-			end
+		roll.animmodelstring = "new_climbanim"
+	elseif GetConVar("Beatrun_AnimSet"):GetInt() == 1 then
+		roll.animmodelstring = "old_climbanim"
+	elseif GetConVar("Beatrun_AnimSet"):GetInt() == 2 then
+		roll.animmodelstring = "climbanim"
+	end
 
 			CacheBodyAnim()
 			RemoveBodyAnim()

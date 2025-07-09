@@ -11,7 +11,7 @@ local CLIMB_FOLDEDHEAVEUP = 6
 
 local climb1 = {
 	followplayer = false,
-	animmodelstring = "new_climbanim",
+	animmodelstring = "climbanim",
 	allowmove = true,
 	lockang = false,
 	ignorez = true,
@@ -21,6 +21,12 @@ local climb1 = {
 
 local climbstrings = {"climb1", "climb2"}
 ]]
+local LedgeHop = nil
+if SERVER then
+	LedgeHop = CreateConVar("Beatrun_LedgeJump", 1, {FCVAR_REPLICATED, FCVAR_ARCHIVE})
+else
+	LedgeHop = GetConVar("Beatrun_LedgeJump")
+end
 
 if game.SinglePlayer() and SERVER then
 	util.AddNetworkString("Climb_SPFix")
@@ -41,6 +47,8 @@ elseif game.SinglePlayer() and CLIENT then
 		end
 	end)
 end
+
+local RealismMode = GetConVar("Beatrun_RealismMode")
 
 local function ClimbingEnd(ply, mv, cmd)
 	mv:SetOrigin(ply:GetClimbingEnd())
@@ -64,7 +72,7 @@ local function ClimbingEnd(ply, mv, cmd)
 		tr.output = trout
 		local start = tr.start
 
-		for _ = 1, 64 do
+		for i = 1, 64 do
 			start.z = start.z + 1
 
 			util.TraceHull(tr)
@@ -172,8 +180,42 @@ local function ClimbingThink(ply, mv, cmd)
 		end
 
 		local ang = cmd:GetViewAngles()
+		local angg = cmd:GetViewAngles()
 		ang = math.abs(math.AngleDifference(ang.y, ply.wallang.y))
+		if mv:KeyDown(IN_JUMP) and angg.x < -70 then 
+					if LedgeHop:GetBool() then
+						mv:SetOrigin(ply:GetClimbingStart() - ply:GetClimbingAngle():Forward() * 0.6)
+						ply:SetMoveType(MOVETYPE_WALK)
+						mv:SetButtons(0)
+						ply:SetClimbing(0)
+						ply:SetSafetyRollKeyTime(CurTime() + 0.1)
+						ply:ViewPunch(Angle(-2.5, 0, 0))
+						ParkourEvent("springboard", ply)
 
+						if CLIENT and IsFirstTimePredicted() then
+							lockang2 = false
+							lockang = false
+							BodyLimitX = 90
+							BodyLimitY = 180
+			
+							local ang = ply:EyeAngles()
+							ang.x = 0
+							ang.z = 0
+							BodyAnim:SetAngles(ang)
+						elseif game.SinglePlayer() then
+							ply:SendLua("lockang2=false lockang=false BodyLimitX=90 BodyLimitY=180 local ang=LocalPlayer():EyeAngles() ang.x=0 ang.z=0 BodyAnim:SetAngles(ang)")
+						end
+
+						mv:SetVelocity(ply:GetClimbingAngle():Up() * (RealismMode:GetBool() and 300 or 400))
+
+						local activewep = ply:GetActiveWeapon()
+
+						if ply:UsingRH() and mantletype == 1 then
+							activewep:SendWeaponAnim(ACT_VM_RECOIL1)
+						end
+						return
+					end
+		end
 		if mv:KeyDown(IN_JUMP) and ang > 42 then
 			mv:SetOrigin(ply:GetClimbingStart() - ply:GetClimbingAngle():Forward() * 0.6)
 			ply:SetMoveType(MOVETYPE_WALK)
@@ -255,6 +297,50 @@ local function ClimbingThink(ply, mv, cmd)
 				if not trout.Hit then
 					ply:SetClimbing(2)
 					ParkourEvent("climbheave", ply)
+				end
+			elseif mv:KeyDown(IN_JUMP) then
+				local new_tr = {}
+				local new_trout = {}
+
+				local newang = ply:GetClimbingAngle()
+
+				new_tr.start = ply:EyePos() + (newang:Up()*15) + (newang:Forward()*17.5)
+			    new_tr.endpos = new_tr.start + (newang:Up() * 250)
+				new_tr.collisiongroup = COLLISION_GROUP_PLAYER_MOVEMENT
+			    new_tr.filter = ply
+			    new_tr.output = new_trout
+
+				util.TraceLine(new_tr)
+
+				if new_trout.Hit and not new_trout.StartSolid then
+					mv:SetOrigin(ply:GetClimbingStart() - ply:GetClimbingAngle():Forward() * 0.6)
+			        ply:SetMoveType(MOVETYPE_WALK)
+			        mv:SetButtons(0)
+			        ply:SetClimbing(0)
+			        ply:SetSafetyRollKeyTime(CurTime() + 0.1)
+			        ParkourEvent("hangjump", ply)
+
+				    if CLIENT and IsFirstTimePredicted() then
+						lockang2 = false
+						lockang = false
+						BodyLimitX = 90
+						BodyLimitY = 180
+		
+						local ang = ply:EyeAngles()
+						ang.x = 0
+						ang.z = 0
+						BodyAnim:SetAngles(ang)
+					elseif game.SinglePlayer() then
+						ply:SendLua("lockang2=false lockang=false BodyLimitX=90 BodyLimitY=180 local ang=LocalPlayer():EyeAngles() ang.x=0 ang.z=0 BodyAnim:SetAngles(ang)")
+					end
+
+					--local jump_vel = 300
+					local dist = ply:EyePos():Distance(new_trout.HitPos)
+
+					local dist_frac = math.Clamp(dist/new_trout.Fraction, 0, 1000)
+					local dist_perc = math.Clamp(dist/85, 1.15, 100)
+
+			        mv:SetVelocity(newang:Up() * (dist_frac*dist_perc))
 				end
 			end
 		end
@@ -398,11 +484,7 @@ end
 
 hook.Add("StartCommand", "ClimbingRemoveInput", ClimbingRemoveInput)
 
-local realistic = CreateConVar("Beatrun_LeRealisticClimbing", "0", FCVAR_ARCHIVE, "Makes you be able to climb and wallrun only if you have runnerhands equipped.")
-
 local function ClimbingCheck(ply, mv, cmd)
-	if realistic:GetBool() and not ply:UsingRH() then return end
-
 	local mins, maxs = ply:GetHull()
 
 	if not ply.ClimbingTrace then
@@ -621,8 +703,7 @@ local function ClimbingCheck(ply, mv, cmd)
 		mv:SetOrigin(startpos)
 	end
 
-	local __mins, __maxs = ply:GetHull()
-	tr.start = mv:GetOrigin() + wallang:Forward() * 20 + vector_up * __maxs.z + vector_up * 5
+	tr.start = startpos - wallang:Forward() * 0.533
 	tr.endpos = tr.start
 
 	util.TraceHull(tr)
@@ -653,7 +734,7 @@ local function ClimbingCheck(ply, mv, cmd)
 
 	ply:SetClimbing(climbvalue)
 	ply:SetClimbingStart(startpos)
-	ply:SetClimbingEnd(tr.endpos)
+	ply:SetClimbingEnd(endpos)
 	ply:SetClimbingTime(0)
 	ply:SetClimbingDelay(CurTime() + 0.75)
 
@@ -700,6 +781,14 @@ local function ClimbingCheck(ply, mv, cmd)
 	if folded then
 		ply:SetClimbing(5)
 		ply:SetClimbingDelay(CurTime() + 0.8)
+
+		if RealismMode:GetBool() then
+			local damageinfo = DamageInfo()
+		    damageinfo:SetDamageType(32)
+		    damageinfo:SetDamage((math.abs(lastvel.z+400)/600)*100)
+
+		    ply:TakeDamageInfo(damageinfo)
+		end
 
 		ParkourEvent("hangfoldedstart", ply)
 	else

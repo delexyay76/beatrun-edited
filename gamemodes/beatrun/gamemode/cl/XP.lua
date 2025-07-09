@@ -1,6 +1,7 @@
 local meta = FindMetaTable("Player")
 local XP_ratiocache = nil
 local parkourevent_lastpos = Vector()
+local xpMultiplier = GetConVar("Beatrun_XpMultiplier")
 
 function XP_nextlevel(level)
 	return math.Round(0.25 * level ^ 3 + 0.8 * level ^ 2 + 2 * level)
@@ -42,7 +43,7 @@ hook.Add("OnParkour", "ParkourXP", function(event)
 	local pos = ply:GetPos()
 
 	if math.random() < (ParkourXP_RNG[event] or 1) and (not ParkourXP_PosCheck[event] or parkourevent_lastpos:Distance(pos) > 200) then
-		local xp = (ParkourXP[event] or 0) * math.max(math.Round(ply:GetLevel() * 0.05), 1)
+		local xp = (ParkourXP[event] or 0) * math.max(math.Round(ply:GetLevel() * 0.05), 1) * xpMultiplier:GetInt()
 
 		ply:AddXP(xp)
 

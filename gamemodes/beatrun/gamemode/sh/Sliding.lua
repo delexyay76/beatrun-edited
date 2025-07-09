@@ -31,13 +31,15 @@ local animtable = {
 	deleteonend = false,
 	BodyLimitX = 50,
 	AnimString = "meslidestart",
-	animmodelstring = "new_climbanim",
+	animmodelstring = "climbanim",
 	camjoint = "camerajoint",
 	usefullbody = 2
 }
 ]]
 
 local blocked = false
+
+local RealismMode = GetConVar("Beatrun_RealismMode")
 
 local function SlidingAnimThink()
 	local ba = BodyAnim
@@ -246,7 +248,6 @@ end
 
 hook.Add("SetupMove", "qslide", function(ply, mv, cmd)
 	if not ply:Alive() then return end
-	if ply:GetSafetyRollTime() > CurTime() then return end
 
 	if not ply.OldDuckSpeed then
 		ply.OldDuckSpeed = ply:GetDuckSpeed()
@@ -259,7 +260,7 @@ hook.Add("SetupMove", "qslide", function(ply, mv, cmd)
 	speed = speed:Length()
 
 	local runspeed = ply:GetRunSpeed()
-	local slidetime = math.max(0.1, qslide_duration)
+	local slidetime = RealismMode:GetBool() and math.max(0.1, 1.5) or math.max(0.1, qslide_duration)
 	local ducking = mv:KeyDown(IN_DUCK)
 	local crouching = ply:Crouching()
 	local sprinting = mv:KeyDown(IN_SPEED)
@@ -322,10 +323,12 @@ hook.Add("SetupMove", "qslide", function(ply, mv, cmd)
 
 					ply:SetCrouchJump(false)
 
-					if SERVER and mv:GetVelocity().z <= -1250 and not ply:InOverdrive() then
+					if SERVER and mv:GetVelocity().z <= -1250 then
 						local dmg = DamageInfo()
-							dmg:SetDamageType(DMG_FALL)
-							dmg:SetDamage(1000)
+
+						dmg:SetDamageType(DMG_FALL)
+						dmg:SetDamage(1000)
+
 						ply:TakeDamageInfo(dmg)
 					end
 				end
@@ -366,10 +369,7 @@ hook.Add("SetupMove", "qslide", function(ply, mv, cmd)
 		end
 	end
 
-	local able_to_slide = ducking and sprinting and speed > runspeed * 0.5
-	local already_sliding = (ply:GetSlidingDelay() >= CT) or ply:GetSliding()
-
-	if not already_sliding and ply:Alive() and onground and not ply:GetJumpTurn() and (able_to_slide or slippery or ply:GetDive()) then
+	if ply:GetSlidingDelay() < CT and ply:Alive() and (ducking and sprinting and speed > runspeed * 0.5 or slippery and ply:GetSafetyRollTime() <= CurTime() - 0.25 or ply:GetDive() and ply:GetSafetyRollKeyTime() <= CurTime()) and onground and not sliding then
 		vel = math.min(speed, 541.44) * ply:GetOverdriveMult()
 
 		ParkourEvent(slippery and "slide45" or "slide", ply)
@@ -383,6 +383,9 @@ hook.Add("SetupMove", "qslide", function(ply, mv, cmd)
 
 		if ply:GetDive() then
 			ply.DiveSliding = true
+			if RealismMode:GetBool() and not slippery then
+				slidetime = math.max(0.1, 0.5)
+			end
 		end
 
 		ply:SetViewOffset(Vector(0, 0, 64))
@@ -522,8 +525,8 @@ hook.Add("SetupMove", "qslide", function(ply, mv, cmd)
 		if not slippery and pos.z > ply:GetSlidingLastPos().z + 1 then
 			ply:SetSlidingTime(ply:GetSlidingTime() - 0.025)
 		elseif slippery or slidedelta < 1 and pos.z < ply:GetSlidingLastPos().z - 0.25 then
-			ply:SetSlidingTime(CT + slidetime)						 --[[ GetConVar("Beatrun_SpeedLimit"):GetInt() ]]
-			ply:SetSlidingVel(math.min(mv:GetVelocity():Length() * 0.865, 450 * ply:GetOverdriveMult()))
+			ply:SetSlidingTime(CT + slidetime)                          --[[ 450 * ply:GetOverdriveMult() ]]
+			ply:SetSlidingVel(math.min(mv:GetVelocity():Length() * 0.865, GetConVar("Beatrun_SpeedLimit"):GetInt() * 2) * ply:GetOverdriveMult())
 		end
 
 		ply:SetSlidingLastPos(pos)
@@ -680,7 +683,7 @@ hook.Add("StartCommand", "qslidespeed", function(ply, cmd)
 
 		cmd:ClearMovement()
 
-		local slidetime = math.max(0.1, qslide_duration)
+		local slidetime = RealismMode:GetBool() and math.max(0.1, 1.5) or math.max(0.1, qslide_duration)
 
 		if (ply:GetSlidingTime() - CurTime()) / slidetime > 0.8 and (ply.SlidingInitTime > CurTime() - 0.25 or ply:GetSlidingSlippery()) then
 			cmd:SetButtons(bit.bor(cmd:GetButtons(), IN_DUCK))

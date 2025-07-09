@@ -1421,8 +1421,10 @@ function CheckAnims()
 
 	if AnimSet:GetInt() == 0 then
 		animtable.animmodelstring = "new_climbanim"
-	else
+	elseif AnimSet:GetInt() == 1 then
 		animtable.animmodelstring = "old_climbanim"
+		elseif AnimSet:GetInt() == 2 then
+		animtable.animmodelstring = "climbanim"
 	end
 
 	StartBodyAnim(animtable)

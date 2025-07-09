@@ -1,4 +1,6 @@
 local allowPropSpawn = CreateConVar("Beatrun_AllowPropSpawn", "0", {FCVAR_ARCHIVE})
+local realismModeParkour = CreateConVar("Beatrun_RealismMode", 0, {FCVAR_REPLICATED, FCVAR_ARCHIVE}, "Realistic Parkour", 0, 1)
+local xpMultiplier = CreateConVar("Beatrun_XpMultiplier", 1, {FCVAR_REPLICATED, FCVAR_ARCHIVE}, "Xp Multiplier", 0, 100)
 
 if SERVER then
 	util.AddNetworkString("SPParkourEvent")

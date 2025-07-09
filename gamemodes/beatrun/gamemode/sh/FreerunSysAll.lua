@@ -1,6 +1,7 @@
 local quakejump = CreateConVar("Beatrun_QuakeJump", 1, {FCVAR_REPLICATED, FCVAR_ARCHIVE})
 local sidestep = CreateConVar("Beatrun_SideStep", 1, {FCVAR_REPLICATED, FCVAR_ARCHIVE})
-local speed_limit = CreateConVar("Beatrun_SpeedLimit", 325, {FCVAR_REPLICATED, FCVAR_ARCHIVE})
+local speed_limit = CreateConVar("Beatrun_SpeedLimit", 380, {FCVAR_REPLICATED, FCVAR_ARCHIVE})
+local BeatrunFootsteps = CreateClientConVar("Beatrun_Footsteps", 1, true, true, "Footsteps", 0, 1)
 
 local function Hardland(jt)
 	local ply = LocalPlayer()
@@ -90,6 +91,7 @@ hook.Add("PlayerStepSoundTime", "MEStepTime", function(ply, step, walking)
 end)
 
 hook.Add("PlayerFootstep", "MEStepSound", function(ply, pos, foot, sound, volume, filter, skipcheck)
+	if !BeatrunFootsteps:GetBool() then return end
 	ply:SetStepRight(not ply:GetStepRight())
 
 	if (ply:GetSliding() or CurTime() < ply:GetSafetyRollTime() - 0.5) and not skipcheck then return true end
@@ -352,7 +354,7 @@ hook.Add("SetupMove", "MESetupMove", function(ply, mv, cmd)
 
 		if mv:KeyPressed(IN_JUMP) and not quakejump:GetBool() and activewep:GetWasOnGround() and not ply:GetJumpTurn() and ply:GetViewModel():GetCycle() < 0.25 then
 			local vel = mv:GetVelocity()
-			vel:Mul(0.75)
+			vel:Mul(75)
 			vel.z = -speed_limit:GetInt() + 25
 
 			mv:SetVelocity(vel)

@@ -5,6 +5,14 @@ tiltdir = 1
 local wrmins = Vector(-16, -16, 0)
 local wrmaxs = Vector(16, 16, 16)
 
+local RealismMode = GetConVar("Beatrun_RealismMode")
+
+local ledgetime = 0
+local foundledge = false
+local climbstartpos = vector_origin
+local climboffset = vector_origin
+local climboffset2 = vector_origin
+
 function PuristWallrunningCheck(ply, mv, cmd, vel, eyeang, timemult, speedmult)
 	local downvel = mv:GetVelocity().z
 
@@ -65,7 +73,7 @@ function PuristWallrunningCheck(ply, mv, cmd, vel, eyeang, timemult, speedmult)
 
 				ply.WallrunOrigAng = angdir
 
-				ply:SetWallrunData(1, CurTime() + vwrtime * timemult * speedmult, wallnormal)
+				ply:SetWallrunData(1, CurTime() + (not RealismMode:GetBool() and vwrtime or 1) * timemult * speedmult, wallnormal)
 				ply:ViewPunch(Angle(-5, 0, 0))
 
 				ParkourEvent("wallrunv", ply)
@@ -113,7 +121,7 @@ function PuristWallrunningCheck(ply, mv, cmd, vel, eyeang, timemult, speedmult)
 
 			mv:SetVelocity(vector_origin)
 
-			ply:SetWallrunData(2, CurTime() + hwrtime * timemult, trout.HitNormal)
+			ply:SetWallrunData(2, CurTime() + (not RealismMode:GetBool() and hwrtime or 1) * timemult, trout.HitNormal)
 
 			ParkourEvent("wallrunh", ply)
 
@@ -157,7 +165,7 @@ function PuristWallrunningCheck(ply, mv, cmd, vel, eyeang, timemult, speedmult)
 			mv:SetVelocity(vector_origin)
 
 			ply:SetWallrunElevated(false)
-			ply:SetWallrunData(3, CurTime() + hwrtime * timemult, trout.HitNormal)
+			ply:SetWallrunData(3, CurTime() + (not RealismMode:GetBool() and hwrtime or 1) * timemult, trout.HitNormal)
 
 			ParkourEvent("wallrunh", ply)
 
@@ -183,18 +191,24 @@ function PuristWallrunningThink(ply, mv, cmd, wr, wrtimeremains)
 		local ang = cmd:GetViewAngles()
 		ang.x = 0
 
-		local vel = ang:Forward() * 30
-		vel.z = 25
+		local vel = ang:Forward() * (RealismMode:GetBool() and 5 or 30)
+		vel.z = RealismMode:GetBool() and -30 or 25
 
 		mv:SetVelocity(vel)
 		mv:SetSideSpeed(0)
 		mv:SetForwardSpeed(0)
 
+		if foundledge then
+			ply:SetMoveType(MOVETYPE_WALK)
+			foundledge = false
+		end
+
 		if ply:GetWallrunTime() < CurTime() or mv:GetVelocity():Length() < 10 then
 			ply:SetWallrun(0)
 			ply:SetQuickturn(false)
 
-			mv:SetVelocity(vel * 4)
+
+			mv:SetVelocity(vel * (RealismMode:GetBool() and 0 or 4))
 
 			local activewep = ply:GetActiveWeapon()
 
@@ -211,7 +225,9 @@ function PuristWallrunningThink(ply, mv, cmd, wr, wrtimeremains)
 
 			ply:SetSafetyRollKeyTime(CurTime() + 0.001)
 
+			vel = RealismMode:GetBool() and ang:Forward() * 30 or vel
 			vel.z = 30
+			
 			vel:Mul(ply:GetOverdriveMult())
 
 			mv:SetVelocity(vel * 8)
@@ -231,18 +247,34 @@ function PuristWallrunningThink(ply, mv, cmd, wr, wrtimeremains)
 	end
 
 	if wr == 1 and wrtimeremains then
-		local velz = math.Clamp((ply:GetWallrunTime() - CurTime()) / vwrtime, 0.1, 1)
+		local velz = math.Clamp((ply:GetWallrunTime() - CurTime()) / (not RealismMode:GetBool() and vwrtime or 1), 0.1, 1)
 		local vecvel = Vector()
-		vecvel.z = 200 * velz
+		vecvel.z = (RealismMode:GetBool() and 250 or 200) * velz
 		vecvel:Add(ply:GetWallrunDir():Angle():Forward() * -50)
 		vecvel:Mul(ply:GetOverdriveMult())
 
-		mv:SetVelocity(vecvel)
+		if not foundledge then
+			mv:SetVelocity(vecvel)
+		end
 		mv:SetForwardSpeed(0)
 		mv:SetSideSpeed(0)
 
 		local tr = ply.WallrunTrace
+
+		local tr_up = {}
+		local tr_down = {}
+		local tr_front = {}
+
+		local tr_roof = {}
+
 		local trout = ply.WallrunTraceOut
+
+		local trout_up = {}
+		local trout_down = {}
+		local trout_front = {}
+
+		local trout_roof = {}
+
 		local eyeang = ply.WallrunOrigAng or Angle()
 		eyeang.x = 0
 
@@ -252,10 +284,74 @@ function PuristWallrunningThink(ply, mv, cmd, wr, wrtimeremains)
 		tr.collisiongroup = COLLISION_GROUP_PLAYER_MOVEMENT
 		tr.output = trout
 
-		util.TraceLine(tr)
+		tr_roof.start = ply:EyePos()
+		tr_roof.endpos = tr_roof.start + eyeang:Up() * 25
+		tr_roof.filter = ply
+		tr_roof.collisiongroup = COLLISION_GROUP_PLAYER_MOVEMENT
+		tr_roof.output = trout_roof
 
-		if not trout.Hit then
+		util.TraceLine(tr)
+		util.TraceLine(tr_roof)
+
+		tr_up.start = ply:EyePos() + (eyeang:Forward() * 14)
+		tr_up.endpos = tr_up.start + eyeang:Up() * 20
+		tr_up.filter = ply
+		tr_up.collisiongroup = COLLISION_GROUP_PLAYER_MOVEMENT
+		tr_up.output = trout_up
+
+		tr_down.start = ply:EyePos() + (eyeang:Forward() * 14) + (eyeang:Up() * 30)
+		tr_down.endpos = tr_down.start - eyeang:Up() * 50
+		tr_down.filter = ply
+		tr_down.collisiongroup = COLLISION_GROUP_PLAYER_MOVEMENT
+		tr_down.output = trout_down
+
+		tr_front.start = ply:EyePos() + (eyeang:Forward() * -15) + (eyeang:Up() * 10)
+		tr_front.endpos = tr_front.start + eyeang:Forward() * 40
+		tr_front.filter = ply
+		tr_front.collisiongroup = COLLISION_GROUP_PLAYER_MOVEMENT
+		tr_front.output = trout_front
+
+		util.TraceLine(tr_up)
+		util.TraceLine(tr_front)
+		util.TraceLine(tr_down)
+
+		if (not trout.Hit or trout_roof.Hit) and not foundledge then
 			ply:SetWallrunTime(0)
+		end
+
+		if trout_up.Hit and trout_front.Hit and (trout_down.Hit and trout_down.HitBox == trout_up.HitBox and not trout_down.StartSolid) and not foundledge and not trout_roof.Hit then
+			foundledge = true
+			climbstartpos = mv:GetOrigin()
+			climboffset = trout_front.HitPos:Distance2D(mv:GetOrigin())
+			climboffset2 = trout_down.HitPos:Distance(mv:GetOrigin())
+			ply:SetDTFloat(13, 0)
+			lasttime = CurTime() + 0.25
+		end
+		if foundledge then
+			mv:SetVelocity(vector_origin)
+
+			local mlerp = ply:GetDTFloat(13)
+			local FT = FrameTime()
+		    local TargetTick = 1 / FT / 30
+			local mlerprate = 0.1 / TargetTick
+
+			local mvec = LerpVector(ply:GetDTFloat(13), climbstartpos, climbstartpos+(eyeang:Forward() * -(climboffset/1.65))+(eyeang:Up() * (climboffset2/2)))
+			mv:SetOrigin(mvec)
+
+			ply:SetDTFloat(13, Lerp(mlerprate, mlerp, 1))
+
+	        ply:SetMoveType(MOVETYPE_NOCLIP)
+
+			if lasttime < CurTime() then
+				ply:SetWallrunTime(0)
+
+				ply:SetMoveType(MOVETYPE_WALK)
+				mv:SetOrigin(climbstartpos+(eyeang:Forward() * -(climboffset/1.65))+(eyeang:Up() * (climboffset2/2)))
+
+				ply:SetVelocity(eyeang:Up() * 60)
+
+				foundledge = false
+			end
 		end
 
 		if mv:KeyPressed(IN_JUMP) and (mv:KeyDown(IN_MOVELEFT) or mv:KeyDown(IN_MOVERIGHT)) then
@@ -308,13 +404,13 @@ function PuristWallrunningThink(ply, mv, cmd, wr, wrtimeremains)
 		end
 
 		if not ply:GetWallrunElevated() and trout.Hit then
-			vecvel.z = 100
+			vecvel.z = RealismMode:GetBool() and 25 or 100
 		elseif not ply:GetWallrunElevated() and not trout.Hit then
 			ply:SetWallrunElevated(true)
 		end
 
 		if ply:GetWallrunElevated() then
-			vecvel.z = 0 + math.Clamp(-(CurTime() - ply:GetWallrunTime() + 1.025) * 250, -400, 25)
+			vecvel.z = 0 + math.Clamp(-(CurTime() - ply:GetWallrunTime() + 1.025) * (RealismMode:GetBool() and 300 or 250), -400, (RealismMode:GetBool() and 0 or 25))
 		end
 
 		if vecvel:Length() > 300 then
@@ -340,7 +436,7 @@ function PuristWallrunningThink(ply, mv, cmd, wr, wrtimeremains)
 
 		util.TraceHull(tr)
 
-		if not trout.Hit and ply:GetWallrunTime() - CurTime() < hwrtime * 0.7 then
+		if not trout.Hit and ply:GetWallrunTime() - CurTime() < (not RealismMode:GetBool() and hwrtime or 1) * 0.7 then
 			tr.start = ply:EyePos()
 			tr.endpos = tr.start + eyeang:Forward() * -60
 			tr.filter = ply
@@ -357,7 +453,7 @@ function PuristWallrunningThink(ply, mv, cmd, wr, wrtimeremains)
 
 				ply:SetWallrunDir(trout.HitNormal)
 			end
-		elseif ply:GetWallrunTime() - CurTime() < hwrtime * 0.7 then
+		elseif ply:GetWallrunTime() - CurTime() < (not RealismMode:GetBool() and hwrtime or 1) * 0.7 then
 			tr.start = ply:EyePos()
 			tr.endpos = tr.start + eyeang:Right() * 45 * dir
 			tr.filter = ply
@@ -371,12 +467,12 @@ function PuristWallrunningThink(ply, mv, cmd, wr, wrtimeremains)
 			end
 		end
 
-		if mv:KeyPressed(IN_JUMP) and ply:GetWallrunTime() - CurTime() ~= hwrtime then
+		if mv:KeyPressed(IN_JUMP) and ply:GetWallrunTime() - CurTime() ~= (not RealismMode:GetBool() and hwrtime or 1) then
 			ply:SetQuickturn(false)
 			ply:SetWallrunTime(0)
 			ply:SetSafetyRollKeyTime(CurTime() + 0.001)
 
-			mv:SetVelocity(eyeang:Forward() * math.max(150, vecvel:Length() - 25) + Vector(0, 0, 250))
+			mv:SetVelocity(eyeang:Forward() * math.max(150, vecvel:Length() - 25) + Vector(0, 0, (not RealismMode:GetBool() and 250 or 175)))
 
 			local event = ply:GetWallrun() == 3 and "jumpwallrunright" or "jumpwallrunleft"
 
@@ -393,9 +489,9 @@ function PuristWallrunningThink(ply, mv, cmd, wr, wrtimeremains)
 		local wr = ply:GetWallrun()
 
 		if wr == 1 then
-			delay = math.Clamp(math.abs(ply:GetWallrunTime() - CurTime() - 2.75) / vwrtime * 0.165, 0.175, 0.3)
+			delay = math.Clamp(math.abs(ply:GetWallrunTime() - CurTime() - 2.75) / (not RealismMode:GetBool() and vwrtime or 1) * 0.165, 0.175, 0.3)
 		else
-			delay = math.Clamp(math.abs(ply:GetWallrunTime() - CurTime()) / hwrtime * 0.165, 0.15, 1.75)
+			delay = math.Clamp(math.abs(ply:GetWallrunTime() - CurTime()) / (not RealismMode:GetBool() and hwrtime or 1) * 0.165, 0.15, 1.75)
 		end
 
 		if SERVER then
@@ -410,7 +506,7 @@ function PuristWallrunningThink(ply, mv, cmd, wr, wrtimeremains)
 		ply:ViewPunch(Angle(0.25, 0, 0))
 	end
 
-	if ply:GetWallrunTime() < CurTime() or mv:GetVelocity():Length() < 10 then
+	if (ply:GetWallrunTime() < CurTime() or mv:GetVelocity():Length() < 10) and not foundledge then
 		if ply.vwrturn == 0 then
 			ply:SetQuickturn(false)
 		end

@@ -1,3 +1,5 @@
+local Beatrun_DisableGrappleAll = CreateConVar("Beatrun_DisableGrappleAll", 0, {FCVAR_REPLICATED, FCVAR_ARCHIVE})
+
 if CLIENT then
 	local disable_grapple = CreateClientConVar("Beatrun_DisableGrapple", 0, true, true, language.GetPhrase("beatrun.convars.disablegrapple"), 0, 1)
 
@@ -9,7 +11,7 @@ if CLIENT then
 	hook.Add("HUDPaint", "grappleicon", function()
 		local ply = LocalPlayer()
 
-		if disable_grapple:GetBool() and Course_Name == "" then return end
+		if (disable_grapple:GetBool() or Beatrun_DisableGrappleAll:GetBool()) and Course_Name == "" then return end
 		if ply:GetMantle() ~= 0 or ply:GetClimbing() ~= 0 then return end
 		if not ply:Alive() or Course_Name ~= "" then return end
 		if not ply:UsingRH() then return end
@@ -62,7 +64,7 @@ hook.Add("SetupMove", "Grapple", function(ply, mv, cmd)
 	if ply:GetMantle() ~= 0 or ply:GetClimbing() ~= 0 then return end
 	if ply:GetInfoNum("Beatrun_DisableGrapple", 0) == 1 and Course_Name == "" then return end
 	if not ply:Alive() or Course_Name ~= "" and ply:GetNW2Int("CPNum", 1) ~= -1 and not ply:GetNW2Entity("Swingrope"):IsValid() then return end
-	if GetGlobalBool("GM_INFECTION") or GetGlobalBool("GM_DATATHEFT") or GetGlobalBool("GM_DEATHMATCH") and not ply:GetNW2Entity("Swingrope"):IsValid() then return end
+	if Beatrun_DisableGrappleAll:GetBool() or GetGlobalBool("GM_INFECTION") or GetGlobalBool("GM_DATATHEFT") or GetGlobalBool("GM_DEATHMATCH") and not ply:GetNW2Entity("Swingrope"):IsValid() then return end
 
 	if FrameTime() <= 0 then return end
 

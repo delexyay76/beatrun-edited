@@ -4,6 +4,7 @@ tiltdir = 1
 local tilt = 0
 
 PuristWallrun = CreateConVar("Beatrun_PuristWallrun", 1, {FCVAR_REPLICATED, FCVAR_ARCHIVE}, "'Realistic' wallrunning", 0, 1)
+local RealismMode = GetConVar("Beatrun_RealismMode")
 
 function WallrunningTilt(ply, pos, ang, fov)
 	local wr = ply:GetWallrun()
@@ -80,7 +81,7 @@ local function WallrunningThink(ply, mv, cmd)
 
 	local wrtimeremains = CurTime() < ply:GetWallrunTime()
 
-	if PuristWallrun:GetBool() then
+	if PuristWallrun:GetBool() or RealismMode:GetBool() then
 		PuristWallrunningThink(ply, mv, cmd, wr, wrtimeremains)
 
 		return
@@ -342,11 +343,7 @@ end
 
 -- local upcheck = Vector(0, 0, 75)
 
-local realistic = GetConVar("Beatrun_LeRealisticClimbing")
-
 local function WallrunningCheck(ply, mv, cmd)
-	if realistic:GetBool() and not ply:UsingRH() then return end
-	
 	if not ply.WallrunTrace then
 		ply.WallrunTrace = {}
 		ply.WallrunTraceOut = {}
@@ -364,7 +361,7 @@ local function WallrunningCheck(ply, mv, cmd)
 	if ply:GetGrappling() then return end
 	if ply:GetJumpTurn() then return end
 
-	if PuristWallrun:GetBool() then
+	if PuristWallrun:GetBool() or RealismMode:GetBool() then
 		PuristWallrunningCheck(ply, mv, cmd, vel, eyeang, timemult, speedmult)
 
 		return

@@ -261,6 +261,7 @@ hook.Add("PopulateToolMenu", "Beatrun_ToolMenu", function()
 		local animsetting = panel:ComboBox("#beatrun.toolsmenu.gameplay.animset", "Beatrun_AnimSet")
 		animsetting:AddChoice("#beatrun.toolsmenu.gameplay.animset1", 0)
 		animsetting:AddChoice("#beatrun.toolsmenu.gameplay.animset2", 1)
+		animsetting:AddChoice("#beatrun.toolsmenu.gameplay.animset3", 2)
 
 		panel:CheckBox("#beatrun.toolsmenu.gameplay.quickturnground", "Beatrun_QuickturnGround")
 		panel:ControlHelp("#beatrun.toolsmenu.gameplay.quickturngrounddesc")
@@ -273,6 +274,9 @@ hook.Add("PopulateToolMenu", "Beatrun_ToolMenu", function()
 
 		panel:CheckBox("#beatrun.toolsmenu.gameplay.puristmode", "Beatrun_PuristMode")
 		panel:ControlHelp(language.GetPhrase("beatrun.toolsmenu.gameplay.puristmodedesc"))
+
+		panel:CheckBox("#beatrun.toolsmenu.gameplay.footsteps", "Beatrun_Footsteps")
+		panel:ControlHelp("#beatrun.toolsmenu.gameplay.footstepsdesc")
 
 		panel:CheckBox("#beatrun.toolsmenu.gameplay.disablegrapple", "Beatrun_DisableGrapple")
 		panel:ControlHelp("#beatrun.toolsmenu.gameplay.disablegrappledesc")
@@ -302,6 +306,9 @@ hook.Add("PopulateToolMenu", "Beatrun_ToolMenu", function()
 
 		panel:CheckBox("#beatrun.toolsmenu.misc.lerealisticclimbing", "Beatrun_LeRealisticClimbing")
 		panel:ControlHelp("#beatrun.toolsmenu.misc.lerealisticclimbingdesc")
+
+		panel:CheckBox("#beatrun.toolsmenu.gameplay.disablegrapall", "Beatrun_DisableGrappleAll")
+		panel:ControlHelp("#beatrun.toolsmenu.gameplay.disablegrapalldesc")
 	end)
 
 	spawnmenu.AddToolMenuOption("Beatrun", "Server", "beatrun_moves", "#beatrun.toolsmenu.moves.name", "", "", function(panel)
@@ -312,11 +319,17 @@ hook.Add("PopulateToolMenu", "Beatrun_ToolMenu", function()
 		panel:NumSlider("#beatrun.toolsmenu.moves.speedlimit", "Beatrun_SpeedLimit", 325, 1000, 0)
 		panel:ControlHelp(language.GetPhrase("beatrun.toolsmenu.moves.speedlimitdesc"))
 
+		panel:NumSlider("#beatrun.toolsmenu.moves.xpmult", "Beatrun_XpMultiplier", 0, 100, 0)
+		panel:ControlHelp(language.GetPhrase("beatrun.toolsmenu.moves.xpmultdesc"))
+
 		panel:CheckBox("#beatrun.toolsmenu.moves.forcepuristmode", "Beatrun_PuristModeForce")
 		panel:ControlHelp("#beatrun.toolsmenu.moves.forcepuristmodedesc")
 
 		panel:CheckBox("#beatrun.toolsmenu.moves.realisticwallrunning", "Beatrun_PuristWallrun")
 		panel:ControlHelp("#beatrun.toolsmenu.moves.realisticwallrunningdesc")
+		
+		panel:CheckBox("#beatrun.toolsmenu.moves.realism", "Beatrun_RealismMode")
+		panel:ControlHelp("#beatrun.toolsmenu.moves.realismdesc")
 
 		local divider = vgui.Create("DHorizontalDivider")
 		panel:AddItem(divider)
@@ -328,6 +341,9 @@ hook.Add("PopulateToolMenu", "Beatrun_ToolMenu", function()
 
 		panel:CheckBox("#beatrun.toolsmenu.moves.quakejump", "Beatrun_QuakeJump")
 		panel:ControlHelp(language.GetPhrase("beatrun.toolsmenu.moves.quakejumpdesc"))
+
+		panel:CheckBox("#beatrun.toolsmenu.gameplay.ljump", "Beatrun_LedgeJump")
+		panel:ControlHelp(language.GetPhrase("beatrun.toolsmenu.gameplay.ljumpdesc"))
 
 		panel:CheckBox("#beatrun.toolsmenu.moves.sidestep", "Beatrun_SideStep")
 		panel:ControlHelp(language.GetPhrase("beatrun.toolsmenu.moves.sidestepdesc"))
